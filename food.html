@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Food Delivery App - Design Patterns</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #d62828;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+    .section {
+      background: #fff;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      color: #444;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button.primary { background: #d62828; color: #fff; }
+    button.secondary { background: #457b9d; color: #fff; }
+    button:hover { opacity: 0.9; }
+    .log {
+      background: #f1f1f1;
+      padding: 12px;
+      border-radius: 8px;
+      min-height: 100px;
+      font-size: 14px;
+      white-space: pre-line;
+      margin-top: 10px;
+      overflow-y: auto;
+      max-height: 150px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🍔 Food Delivery App (Design Patterns Demo)</h1>
+  <div class="container">
+
+    <!-- Observer Pattern -->
+    <div class="section">
+      <h2>1. Observer Pattern → Restaurant Notifies Delivery Agents</h2>
+      <button class="primary" onclick="placeOrder()">📦 Place Order</button>
+      <div id="observerLog" class="log"></div>
+    </div>
+
+    <!-- Strategy Pattern -->
+    <div class="section">
+      <h2>2. Strategy Pattern → Delivery Fee Calculation</h2>
+      <button class="secondary" onclick="setStrategy('standard')">Standard Delivery</button>
+      <button class="secondary" onclick="setStrategy('express')">Express Delivery</button>
+      <button class="secondary" onclick="setStrategy('free')">Free Delivery</button>
+      <button class="primary" onclick="calculateFee()">💰 Calculate Fee</button>
+      <div id="strategyLog" class="log"></div>
+    </div>
+
+    <!-- Command Pattern -->
+    <div class="section">
+      <h2>3. Command Pattern → User Actions on Orders</h2>
+      <button class="primary" onclick="executeCommand('place')">✅ Place Order</button>
+      <button class="primary" onclick="executeCommand('cancel')">❌ Cancel Order</button>
+      <button class="primary" onclick="executeCommand('track')">🚚 Track Order</button>
+      <div id="commandLog" class="log"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // ---------------------------
+    // 1. OBSERVER PATTERN
+    // ---------------------------
+    class DeliveryAgent {
+      constructor(name) { this.name = name; }
+      update(orderId) {
+        log("observerLog", `${this.name} notified: New Order #${orderId} received!`);
+      }
+    }
+
+    class Restaurant {
+      constructor(name) {
+        this.name = name;
+        this.agents = [];
+      }
+      addAgent(agent) { this.agents.push(agent); }
+      notify(orderId) {
+        this.agents.forEach(agent => agent.update(orderId));
+      }
+    }
+
+    const restaurant = new Restaurant("Pizza Palace");
+    restaurant.addAgent(new DeliveryAgent("Agent A"));
+    restaurant.addAgent(new DeliveryAgent("Agent B"));
+    restaurant.addAgent(new DeliveryAgent("Agent C"));
+
+    let orderCounter = 1;
+    function placeOrder() {
+      log("observerLog", `\n📢 New order placed at ${restaurant.name}`);
+      restaurant.notify(orderCounter++);
+    }
+
+    // ---------------------------
+    // 2. STRATEGY PATTERN
+    // ---------------------------
+    class DeliveryStrategy {
+      calculateFee() { return 0; }
+    }
+    class StandardDelivery extends DeliveryStrategy {
+      calculateFee() { return 40; }
+    }
+    class ExpressDelivery extends DeliveryStrategy {
+      calculateFee() { return 80; }
+    }
+    class FreeDelivery extends DeliveryStrategy {
+      calculateFee() { return 0; }
+    }
+
+    let currentStrategy = new StandardDelivery();
+
+    function setStrategy(type) {
+      if (type === "standard") currentStrategy = new StandardDelivery();
+      if (type === "express") currentStrategy = new ExpressDelivery();
+      if (type === "free") currentStrategy = new FreeDelivery();
+      log("strategyLog", `🚀 Selected: ${type.toUpperCase()} delivery`);
+    }
+
+    function calculateFee() {
+      const fee = currentStrategy.calculateFee();
+      log("strategyLog", `💰 Delivery Fee = ₹${fee}`);
+    }
+
+    // ---------------------------
+    // 3. COMMAND PATTERN
+    // ---------------------------
+    class Command { execute() {} }
+
+    class OrderService {
+      placeOrder() { return "✅ Order placed successfully"; }
+      cancelOrder() { return "❌ Order cancelled"; }
+      trackOrder() { return "🚚 Order is on the way"; }
+    }
+
+    class PlaceOrderCommand extends Command {
+      constructor(service) { super(); this.service = service; }
+      execute() { return this.service.placeOrder(); }
+    }
+    class CancelOrderCommand extends Command {
+      constructor(service) { super(); this.service = service; }
+      execute() { return this.service.cancelOrder(); }
+    }
+    class TrackOrderCommand extends Command {
+      constructor(service) { super(); this.service = service; }
+      execute() { return this.service.trackOrder(); }
+    }
+
+    const service = new OrderService();
+
+    function executeCommand(action) {
+      let command;
+      if (action === "place") command = new PlaceOrderCommand(service);
+      if (action === "cancel") command = new CancelOrderCommand(service);
+      if (action === "track") command = new TrackOrderCommand(service);
+
+      log("commandLog", command.execute());
+    }
+
+    // ---------------------------
+    // Utility: Logger
+    // ---------------------------
+    function log(elementId, message) {
+      const el = document.getElementById(elementId);
+      el.innerText += message + "\n";
+      el.scrollTop = el.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
